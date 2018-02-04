@@ -1,4 +1,10 @@
+# !/usr/bin/env pyhton
 # -*- coding: utf-8 -*-
+
+"""
+本程序是用来爬取豆瓣阅读的所有标签下的内容，采用随机头，随机代理来越过反爬取机制。
+"""
+
 from  scrapy import Spider,Request
 from ..items import DoubanreadingItem
 
@@ -10,18 +16,22 @@ class ReadingSpider(Spider):
     base_url = 'Https://book.douban.com'
 
     def parse(self, response):
+        # 先找出主页面下的所有分类标签。
         tags = response.xpath('//table[@class="tagCol"]/tbody/tr/td/a/@href').extract()
         for tag in tags:
             print('<----- Now crawling tag:%s ----->' % tag)
+            # 发起所有的标签请求。
             yield Request(self.base_url + tag, self.parse_group)
 
     def parse_group(self, response):
+        # 书籍信息块。
         books_info = response.xpath('//ul/li/div[@class="info"]')
         if books_info:
             for sigle_book in books_info:
                 score = sigle_book.xpath('./div[2]/span[2]/text()').extract_first().replace('\n', '').replace(' ', '')
                 voter = sigle_book.xpath('./div[2]/span[3]/text()').extract_first().replace('\n', '').replace(' ', '')
                 # print(score,voter)
+                # 筛选。
                 if eval(voter[1:-4]) >= 2000 and eval(score) >= 8.0:
                     href = sigle_book.xpath('./h2/a/@href').extract_first()
                     print('<----- Is parsing %s ----->' % href)

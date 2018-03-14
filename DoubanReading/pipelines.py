@@ -29,6 +29,6 @@ class MongoPipeline(object):
 
     def process_item(self, item, spider):
         if self.db['books'].update({'name': item['name']}, {'$set': item}, True):
-            print('<----- Saved to mongo ------>')
+            print('Saved to mongodb')
         else:
-            print('<----- Failed to mongo ----->')
+            print('Failed to mongodb')

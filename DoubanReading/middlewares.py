@@ -5,10 +5,11 @@
 # See documentation in:
 # https://doc.scrapy.org/en/latest/topics/spider-middleware.html
 
-from scrapy import signals
-from fake_useragent import UserAgent
-import redis
 import random
+
+from scrapy import signals
+from .settings import USER_AGENT
+from .proxy import get_proxy
 
 
 class DoubanreadingSpiderMiddleware(object):
@@ -107,42 +108,25 @@ class DoubanreadingDownloaderMiddleware(object):
 
 
 class RandomUaMiddleware(object):
-    def __init__(self):
-        self.ua = UserAgent()
-
     def process_request(self, request, spider):
-        ua = self.ua.random
+        ua = random.choice(USER_AGENT)
         request.headers.setdefault('User_Agent', ua)
 
-class ProxyMiddleware(object):
-    # def __init__(self, host, port, password):
-    #     self.host = host
-    #     self.port = port
-    #     self.password = password
-    #     self.client = redis.Redis(host=self.host, port=self.port, password=self.password)
-    #     self.proxies = self.client.lrange('proxies', 0, -1)
-    #
-    # @classmethod
-    # def from_crawler(cls, crawler):
-    #     return cls(
-    #         host=crawler.settings.get('HOST'),
-    #         port=crawler.settings.get('PORT'),
-    #         password=crawler.settings.get('PASSWORD')
-    #     )
 
+class ProxyMiddleware(object):
     def process_request(self, request, spider):
-        # proxy = bytes.decode(random.choice(self.proxies))
-        request.meta['proxy'] = 'http://127.0.0.1:1080'
+        proxy = get_proxy()
+        request.meta['proxy'] = proxy
 
     def process_response(self, request, response, spider):
         if response.status != 200:
-            # proxy = bytes.decode(random.choice(self.proxies))
-            request.meta['proxy'] = 'http://127.0.0.1:1080'
+            proxy = get_proxy()
+            request.meta['proxy'] = proxy
             return request
         return response
 
     def process_exception(self, request, exception, spider):
-        print('<----- An exception was here, going to use proxy. ----->')
-        # proxy = bytes.decode(random.choice(self.proxies))
-        request.meta['proxy'] = 'http://127.0.0.1:1080'
+        print('An exception was here, going to use proxy.')
+        proxy = get_proxy()
+        request.meta['proxy'] = proxy
         return request

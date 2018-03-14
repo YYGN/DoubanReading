@@ -51,7 +51,7 @@ class ReadingSpider(Spider):
         item['introduction'] = '\n'.join(response.xpath('//*[@id="link-report"]/div[1]/div/p/text()').extract())
         item['author_introduction'] = '\n'.join(response.xpath('//*[@id="content"]/div/div[1]/div[3]/div[2]/div/div/p/text()').extract())
         item['hottest_comment'] = '\n'.join(response.xpath('//*[@id="comments"]/ul/li/div/p/text()').extract())
-        next_page = response.xpath('//*[@id="subject_list"]/div[2]/span[5]/a/@href').extract_first()
+        next_page = response.xpath('//span[@class="next"]/a/@href').extract_first()
         if next_page:
             yield Request(self.base_url + next_page)
         else:

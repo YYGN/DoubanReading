@@ -7,6 +7,7 @@
 
 from  scrapy import Spider, Request
 from ..items import DoubanreadingItem
+from ..settings import QUEUE
 
 
 class ReadingSpider(Spider):
@@ -35,17 +36,22 @@ class ReadingSpider(Spider):
                 # 筛选。
                 if eval(voter[1:-4]) >= 2000 and eval(score) >= 8.0:
                     href = sigle_book.xpath('./h2/a/@href').extract_first()
-                    print('Is parsing %s' % href)
-                    yield Request(href, self.parse_detail)
-                    next_page = response.xpath('//span[@class="next"]/a/@href').extract_first()
-                    if next_page:
-                        yield Request(self.base_url + next_page)
+                    if href not in QUEUE:
+                        print('Is parsing %s' % href)
+                        yield Request(href, self.parse_detail)
+                        QUEUE.append(href)
+                        next_page = response.xpath('//span[@class="next"]/a/@href').extract_first()
+                        if next_page:
+                            yield Request(self.base_url + next_page, self.parse_group)
+                        else:
+                            print('This is the last page.')
                     else:
-                        print('This is the last page.')
+                        pass
                 else:
                     return None
         else:
             return None
+
 
     def parse_detail(self, response):
         item = DoubanreadingItem()

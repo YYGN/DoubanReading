@@ -7,6 +7,7 @@
 
 import pymongo
 
+
 class MongoPipeline(object):
 
     def __init__(self, mongo_uri, mongo_db):
@@ -28,7 +29,10 @@ class MongoPipeline(object):
         self.client.close()
 
     def process_item(self, item, spider):
-        if self.db['books'].update({'name': item['name']}, {'$set': item}, True):
-            print('Saved to mongodb')
-        else:
+        try:
+            if self.db['books'].update({'name': item['name']}, {'$set': item}, True):
+                print('Saved to mongodb')
+            else:
+                print('Already exists!')
+        except:
             print('Failed to mongodb')
